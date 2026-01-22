@@ -38,7 +38,6 @@ class MetronService:
                 return func(*args, **kwargs)
 
             except RateLimitError as e:
-                # Mokkari tells you exactly how long to wait
                 wait = e.retry_after or 60
 
                 if "per day" in str(e).lower():
@@ -47,7 +46,6 @@ class MetronService:
                         f"Daily Metron API limit reached. Retry in {wait} seconds."
                     ) from e
 
-                # Minute limit: sleep and retry
                 time.sleep(wait)
 
             except ApiError:
