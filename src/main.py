@@ -1,104 +1,87 @@
 import flet as ft
 
-from views.home_view import HomeView
-from views.my_library_view import MyLibraryView
-from views.releases_view import ReleasesView
-from views.discover_view import DiscoverView
-from views.sub_views.search_view import SearchView
-from views.sub_views.settings_view import SettingsView
+from pages.home_page import home_page
+from pages.releases_page import releases_page
+from pages.my_library_page import my_library_page
+from pages.settings_page import settings_page
+from pages.discover_page import discover_page
+from pages.search_page import search_page
+from pages.series_page import series_page
 
 
 def main(page: ft.Page):
     page.title = "Mobius"
     page.theme_mode = ft.ThemeMode.DARK
+    page.theme = ft.Theme(
+        page_transitions=ft.PageTransitionsTheme(
+            android=ft.PageTransitionTheme.NONE,
+            ios=ft.PageTransitionTheme.NONE,
+            linux=ft.PageTransitionTheme.NONE,
+            macos=ft.PageTransitionTheme.NONE,
+            windows=ft.PageTransitionTheme.NONE,
+        )
+    )
     page.padding = 0
 
-    def show_search(e=None):
-        search = SearchView(page, on_back_click=show_discover)
-        content_container.content = search.build()
-        page.update()
-
-    def show_discover(e=None):
-        discover = DiscoverView(page, on_search_click=show_search)
-        content_container.content = discover.build()
-        page.update()
-
-    def show_settings(e=None):
-        settings = SettingsView(page, on_back_click=show_home)
-        content_container.content = settings.build()
-        page.update()
-
-    def show_home(e=None):
-        home = HomeView(page, on_settings_click=show_settings)
-        content_container.content = home.build()
-        page.update()
-
-    # Initialize views
-    home = HomeView(page, on_settings_click=show_settings)
-    releases = ReleasesView(page)
-    discover = DiscoverView(page, on_search_click=show_search)
-    my_library = MyLibraryView()
-
-    # Container to hold the current view
-    content_container = ft.Container(expand=True)
-    content_container.content = home.build()
-
-    # Navigation change handler
-
-    def on_nav_change(e):
-        index = e.control.selected_index
-
-        if index == 0:
-            content_container.content = home.build()
-        elif index == 1:
-            content_container.content = releases.build()
-        elif index == 2:
-            content_container.content = my_library.build()
-        elif index == 3:
-            content_container.content = discover.build()
-
-        page.update()
-
-    # Profile icon click handler
-    def on_profile_click(e):
-        print("Profile clicked")
-
-    # Settings icon click handler
-    def on_settings_click(e):
-        print("Settings clicked")
-
-    # Navigation Bar
-    page.navigation_bar = ft.NavigationBar(
-        # bgcolor=ft.Colors.TRANSPARENT,
-        # border=ft.Border(top=ft.BorderSide(0.5, ft.Colors.OUTLINE_VARIANT)),
-        overlay_color=ft.Colors.TRANSPARENT,
-        label_behavior=ft.NavigationBarLabelBehavior.ONLY_SHOW_SELECTED,
+    navbar = ft.NavigationBar(
+        selected_index=0,
         destinations=[
+            ft.NavigationBarDestination(icon=ft.Icons.HOME_OUTLINED, label="Home"),
             ft.NavigationBarDestination(
-                icon=ft.Icons.HOME_OUTLINED,
-                selected_icon=ft.Icons.HOME,
-                label="Home",
+                icon=ft.Icons.NEW_RELEASES_OUTLINED, label="Releases"
             ),
             ft.NavigationBarDestination(
-                icon=ft.Icons.NEW_RELEASES_OUTLINED,
-                selected_icon=ft.Icons.NEW_RELEASES,
-                label="Releases",
+                icon=ft.Icons.COLLECTIONS_BOOKMARK_OUTLINED, label="Library"
             ),
             ft.NavigationBarDestination(
-                icon=ft.Icons.COLLECTIONS_BOOKMARK_OUTLINED,
-                selected_icon=ft.Icons.COLLECTIONS_BOOKMARK,
-                label="My Library",
-            ),
-            ft.NavigationBarDestination(
-                icon=ft.Icons.SEARCH_OUTLINED,
-                selected_icon=ft.Icons.SEARCH,
-                label="Discover",
+                icon=ft.Icons.SEARCH_OUTLINED, label="Discover"
             ),
         ],
-        on_change=on_nav_change,
+        on_change=lambda e: set_page(e),
     )
-    page.add(content_container)
+
+    def route_change(e):
+        page.views.clear()
+
+        if page.route == "/":
+            page.views.append(home_page(page, navbar))
+        elif page.route == "/releases":
+            page.views.append(releases_page(page, navbar))
+        elif page.route == "/my_library":
+            page.views.append(my_library_page(page, navbar))
+        elif page.route == "/settings":
+            page.views.append(settings_page(page))
+        elif page.route == "/discover":
+            page.views.append(discover_page(page, navbar))
+        elif page.route == "/search":
+            page.views.append(search_page(page))
+        elif page.route.startswith("/series/"):
+            series_id = int(page.route.split("/")[-1])
+            page.views.append(series_page(page, series_id))
+
+        page.update()
+
+    def set_page(e):
+        index = e.control.selected_index
+        if index == 0:
+            page.go("/")
+        elif index == 1:
+            page.go("/releases")
+        elif index == 2:
+            page.go("/my_library")
+        elif index == 3:
+            page.go("/discover")
+
+    async def view_pop(e):
+        page.views.pop()
+        top_view = page.views[-1]
+        await page.push_route(top_view.route)  # type: ignore
+
+    page.on_route_change = route_change
+    page.on_view_pop = view_pop
+
+    route_change("/")
 
 
 if __name__ == "__main__":
-    ft.run(main)
+    ft.app(main)
