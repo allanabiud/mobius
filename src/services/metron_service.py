@@ -1,4 +1,5 @@
 import os
+import datetime
 import time
 from dotenv import load_dotenv
 
@@ -50,3 +51,65 @@ class MetronService:
 
             except ApiError:
                 raise
+
+    def get_weekly_releases_stats(self):
+        """
+        Calculates the current week's dates and returns counts for
+        New Comics, Debut Issues (#1s), and Pull List matches.
+        """
+        target_date = datetime.date.today()
+        sunday = target_date - datetime.timedelta(days=(target_date.weekday() + 1) % 7)
+        saturday = sunday + datetime.timedelta(days=6)
+
+        all_week_issues = self.fetch_with_retry(
+            self.session.issues_list,
+            params={
+                "store_date_range_after": sunday.isoformat(),
+                "store_date_range_before": saturday.isoformat(),
+            },
+        )
+
+        if not all_week_issues:
+            return {"total": 0, "debuts": 0, "pulls": 0}
+
+        missing_series = self.session.collection_missing_series()
+        missing_names = {s.name for s in missing_series}
+
+        total_count = len(all_week_issues)
+        debut_count = len([i for i in all_week_issues if i.number == "1"])
+        pull_count = len([i for i in all_week_issues if i.series.name in missing_names])
+
+        return {"total": total_count, "debuts": debut_count, "pulls": pull_count}
+
+    def search_series(self, query_text: str):
+        """Fetches series list and attempts to find a cover image for each."""
+        raw_results = self.fetch_with_retry(
+            self.session.series_list, params={"name": query_text}
+        )
+
+        processed_results = []
+        for series in raw_results:
+            first_issue = self.fetch_with_retry(
+                self.session.issues_list, params={"series_id": series.id, "number": 1}
+            )
+            img = first_issue[0].image if first_issue else None
+            processed_results.append({"series": series, "image": img})
+
+        return processed_results
+
+    def search_issues(self, query_text: str):
+        """Fetches issues based on series name."""
+        return self.fetch_with_retry(
+            self.session.issues_list, params={"series_name": query_text}
+        )
+
+    def get_series_details(self, series_id: int):
+        """
+        Fetches full series metadata and all associated issues.
+        Returns a tuple of (series_object, issues_list).
+        """
+        series = self.fetch_with_retry(self.session.series, series_id)
+        issues = self.fetch_with_retry(
+            self.session.issues_list, params={"series_id": series_id}
+        )
+        return series, (issues if issues else [])

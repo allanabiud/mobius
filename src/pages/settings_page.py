@@ -1,4 +1,5 @@
 import flet as ft
+import asyncio
 
 
 def settings_page(page: ft.Page):
@@ -44,7 +45,7 @@ def settings_page(page: ft.Page):
         appbar=ft.AppBar(
             leading=ft.IconButton(
                 icon=ft.Icons.ARROW_BACK_SHARP,
-                on_click=lambda _: page.go("/"),
+                on_click=lambda _: asyncio.create_task(page.push_route("/")),
             ),
             title=ft.Text("Settings", size=20, weight=ft.FontWeight.W_500),
             bgcolor=ft.Colors.SURFACE,

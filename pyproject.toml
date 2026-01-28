@@ -8,14 +8,15 @@ authors = [
     { name = "Flet developer", email = "you@example.com" }
 ]
 dependencies = [
-  "flet>=0.80.2",
+  "flet-desktop>=0.80.2",
+  "flet[all]>=0.80.4",
   "mokkari>=3.17.0",
   "python-dotenv>=1.2.1",
 ]
 
 [dependency-groups]
 dev = [
-  "flet[all]>=0.80.2",
+  "flet[all]>=0.80.4",
 ]
 
 [tool.flet]

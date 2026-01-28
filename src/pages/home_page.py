@@ -1,58 +1,48 @@
 import flet as ft
+import asyncio
+
+from utilities.utils import GradientWrapper
 
 
 def home_page(page: ft.Page, navbar: ft.NavigationBar):
-    return ft.View(
-        route="/",
-        padding=0,
-        navigation_bar=navbar,
+    main_content = ft.Column(
+        expand=True,
         controls=[
-            ft.Container(
-                expand=True,
-                gradient=ft.LinearGradient(
-                    begin=ft.Alignment.TOP_CENTER,
-                    end=ft.Alignment.BOTTOM_CENTER,
-                    colors=[
-                        ft.Colors.with_opacity(0.25, ft.Colors.BLUE_ACCENT),
-                        ft.Colors.TRANSPARENT,
-                    ],
-                ),
-                content=ft.Column(
-                    expand=True,
-                    controls=[
-                        ft.Container(
-                            padding=ft.Padding.only(right=10, top=5),
-                            content=ft.Row(
+            ft.SafeArea(
+                content=ft.Container(
+                    padding=ft.Padding.only(top=10, left=20, right=10, bottom=20),
+                    content=ft.Column(
+                        controls=[
+                            ft.Row(
                                 alignment=ft.MainAxisAlignment.END,
                                 controls=[
                                     ft.IconButton(
                                         icon=ft.Icons.SETTINGS,
-                                        on_click=lambda _: page.go("/settings"),
+                                        icon_size=28,
+                                        on_click=lambda _: asyncio.create_task(
+                                            page.push_route("/settings")
+                                        ),
                                     ),
-                                    ft.IconButton(icon=ft.Icons.ACCOUNT_CIRCLE),
                                 ],
                             ),
-                        ),
-                        ft.Container(
-                            padding=20,
-                            content=ft.Column(
-                                [
-                                    ft.Text("Home", size=32, weight=ft.FontWeight.BOLD),
-                                    ft.Text(
-                                        "Recommendations for you",
-                                        size=18,
-                                        color=ft.Colors.ON_SURFACE_VARIANT,
-                                    ),
-                                ]
+                            ft.Text("Home", size=32, weight=ft.FontWeight.BOLD),
+                            ft.Text(
+                                "Recommendations for you",
+                                size=18,
+                                color=ft.Colors.ON_SURFACE_VARIANT,
                             ),
-                        ),
-                        ft.ListView(
-                            expand=True,
-                            padding=20,
-                            controls=[ft.Text("Recommendations will appear here")],
-                        ),
-                    ],
-                ),
-            )
+                        ],
+                        spacing=5,
+                    ),
+                )
+            ),
+            ft.ListView(),
         ],
+    )
+
+    return ft.View(
+        route="/",
+        padding=0,
+        navigation_bar=navbar,
+        controls=[GradientWrapper(content=main_content, color=ft.Colors.BLUE_ACCENT)],
     )

@@ -1,60 +1,65 @@
 import flet as ft
+import asyncio
+from utilities.utils import GradientWrapper
 
 
 def discover_page(page: ft.Page, navbar: ft.NavigationBar):
-    def on_search_tap(e):
-        page.go("/search")
+
+    def navigate_to_search(_):
+        asyncio.create_task(page.push_route("/search"))
+
+    main_content = ft.Column(
+        expand=True,
+        spacing=0,
+        controls=[
+            ft.SafeArea(
+                content=ft.Container(
+                    padding=ft.Padding.only(top=10, left=20, right=10, bottom=20),
+                    content=ft.Column(
+                        spacing=5,
+                        controls=[
+                            ft.Row(
+                                alignment=ft.MainAxisAlignment.END,
+                                controls=[
+                                    ft.IconButton(
+                                        icon=ft.Icons.SEARCH,
+                                        icon_size=28,
+                                        on_click=navigate_to_search,
+                                    ),
+                                ],
+                            ),
+                            ft.Text("Discover", size=32, weight=ft.FontWeight.BOLD),
+                            ft.Text(
+                                "Explore the Metron Archive",
+                                size=18,
+                                color=ft.Colors.ON_SURFACE_VARIANT,
+                            ),
+                        ],
+                    ),
+                )
+            ),
+            ft.ListView(
+                expand=True,
+                padding=20,
+                controls=[
+                    ft.Text(
+                        "Trending series and publishers will appear here",
+                        italic=True,
+                        color=ft.Colors.with_opacity(0.6, ft.Colors.ON_SURFACE),
+                    )
+                ],
+            ),
+        ],
+    )
 
     return ft.View(
         route="/discover",
         padding=0,
         navigation_bar=navbar,
-        bgcolor=ft.Colors.SURFACE,
         controls=[
-            ft.Container(
-                expand=True,
-                gradient=ft.LinearGradient(
-                    begin=ft.Alignment.TOP_CENTER,
-                    end=ft.Alignment.BOTTOM_CENTER,
-                    stops=[0.0, 0.3, 0.6, 0.9],
-                    colors=[
-                        ft.Colors.with_opacity(0.25, ft.Colors.YELLOW_ACCENT),
-                        ft.Colors.with_opacity(0.12, ft.Colors.YELLOW_ACCENT),
-                        ft.Colors.with_opacity(0.03, ft.Colors.YELLOW_ACCENT),
-                        ft.Colors.TRANSPARENT,
-                    ],
-                ),
-                content=ft.Column(
-                    horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
-                    spacing=0,
-                    controls=[
-                        ft.Container(
-                            padding=ft.Padding.only(
-                                top=20, left=20, right=20, bottom=20
-                            ),
-                            content=ft.SearchBar(
-                                bar_hint_text="Search the Metron Comic Database",
-                                bar_leading=ft.Icon(ft.Icons.SEARCH, size=28),
-                                bar_bgcolor=ft.Colors.with_opacity(
-                                    0.5, ft.Colors.SURFACE
-                                ),
-                                bar_border_side=ft.BorderSide(
-                                    1.5, ft.Colors.OUTLINE_VARIANT
-                                ),
-                                bar_shape=ft.RoundedRectangleBorder(radius=10),
-                                height=55,
-                                on_tap=on_search_tap,
-                                on_focus=on_search_tap,
-                            ),
-                        ),
-                        ft.Column(
-                            expand=True,
-                            alignment=ft.MainAxisAlignment.CENTER,
-                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                            controls=[],
-                        ),
-                    ],
-                ),
+            GradientWrapper(
+                content=main_content,
+                color=ft.Colors.YELLOW_ACCENT,
             )
         ],
     )
